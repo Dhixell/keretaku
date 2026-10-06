@@ -1,98 +1,123 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, FlatList, Pressable, Platform } from 'react-native';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+// 1. Menerapkan Type / Interface
+interface TiketKereta {
+  id: string;
+  namaKereta: string;
+  kelas: string;
+  jamBerangkat: string;
+  harga: number;
+}
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+// 2. Menerapkan Array of Objects
+const daftarTiket: TiketKereta[] = [
+  { id: '1', namaKereta: 'Argo Bromo Anggrek', kelas: 'Eksekutif', jamBerangkat: '08:00', harga: 450000 },
+  { id: '2', namaKereta: 'Matarmaja', kelas: 'Ekonomi', jamBerangkat: '10:30', harga: 150000 },
+  { id: '3', namaKereta: 'Gajayana', kelas: 'Eksekutif', jamBerangkat: '15:00', harga: 550000 },
+  { id: '4', namaKereta: 'Pasundan', kelas: 'Ekonomi', jamBerangkat: '18:15', harga: 120000 },
+];
+
+export default function Index() {
+  // 3. Menerapkan Custom Function
+  const renderTicketCard = ({ item }: { item: TiketKereta }) => (
+    <View style={styles.card}>
+      <View style={styles.headerRow}>
+        <Text style={styles.trainName}>{item.namaKereta}</Text>
+        {/* 4. Menerapkan Inline Style: Warna berubah otomatis tergantung kelas kereta */}
+        <Text style={[styles.trainClass, { color: item.kelas === 'Eksekutif' ? '#f59e0b' : '#3b82f6' }]}>
+          {item.kelas}
+        </Text>
+      </View>
+      
+      <Text style={styles.time}>Berangkat: {item.jamBerangkat}</Text>
+      <Text style={styles.price}>Rp {item.harga.toLocaleString('id-ID')}</Text>
+      
+      <Pressable style={styles.button} onPress={() => alert(`Tiket ${item.namaKereta} dipilih!`)}>
+        <Text style={styles.buttonText}>Pesan Tiket</Text>
+      </Pressable>
+    </View>
+  );
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <View style={styles.container}>
+      <Text style={styles.title}>Jadwal Keretaku</Text>
+      
+      {/* 5. Menerapkan Loop menggunakan FlatList (Lebih optimal dari .map untuk daftar panjang) */}
+      <FlatList
+        data={daftarTiket}
+        keyExtractor={(item) => item.id}
+        renderItem={renderTicketCard}
+        contentContainerStyle={styles.listContainer}
+      />
+    </View>
   );
 }
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
-  );
-}
-
+// 6. Menerapkan External Style
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+  container: { 
+    flex: 1, 
+    backgroundColor: '#f1f5f9',
+    // Memberikan jarak 80px khusus web agar tidak tertutup header, dan 40px untuk HP
+    paddingTop: Platform.OS === 'web' ? 80 : 40,
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+  title: { 
+    fontSize: 24, 
+    fontWeight: 'bold', 
+    textAlign: 'center', 
+    marginBottom: 20, 
+    color: '#0f172a' 
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+  listContainer: { 
+    paddingHorizontal: 16,
+    paddingBottom: 20,
   },
-  title: {
-    textAlign: 'center',
+  card: { 
+    backgroundColor: '#ffffff', 
+    padding: 16, 
+    borderRadius: 12, 
+    marginBottom: 16, 
+    elevation: 3, // Shadow untuk Android
+    shadowColor: '#000', // Shadow untuk iOS
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 4 
   },
-  code: {
-    textTransform: 'uppercase',
+  headerRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 8 
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  trainName: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#1e293b' 
   },
+  trainClass: { 
+    fontSize: 14, 
+    fontWeight: '600' 
+  },
+  time: { 
+    fontSize: 14, 
+    color: '#64748b', 
+    marginBottom: 12 
+  },
+  price: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#10b981', 
+    marginBottom: 16 
+  },
+  button: { 
+    backgroundColor: '#2563eb', 
+    paddingVertical: 10, 
+    borderRadius: 8, 
+    alignItems: 'center' 
+  },
+  buttonText: { 
+    color: '#ffffff', 
+    fontSize: 16, 
+    fontWeight: 'bold' 
+  }
 });
